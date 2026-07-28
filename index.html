@@ -1,34 +1,57 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Dashboard Ofisnack V1.7.0 Base</title>
+<!DOCTYPE html><html lang="es"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Ofisnack V1.7.0 M2</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="bg-slate-100">
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head><body class="bg-slate-100">
 <div class="max-w-6xl mx-auto p-6">
-<h1 class="text-3xl font-bold text-slate-800 mb-6">Dashboard Ofisnack V1.7.0</h1>
-<div class="grid md:grid-cols-2 gap-4 mb-6">
-<div class="bg-white rounded-xl shadow p-5"><div class="text-gray-500">Total Snacks</div><div id="kpiSnacks" class="text-4xl font-bold"></div></div>
-<div class="bg-white rounded-xl shadow p-5"><div class="text-gray-500">Total Boxes</div><div id="kpiBoxes" class="text-4xl font-bold"></div></div>
+<h1 class="text-3xl font-bold mb-4">Dashboard Ofisnack</h1>
+<label class="block border-2 border-dashed rounded-xl p-6 bg-white text-center cursor-pointer">
+<input id="excelFile" type="file" accept=".xlsx,.xls" class="hidden">
+<span>Arrastrá o seleccioná un archivo Excel</span>
+</label>
+<div class="grid grid-cols-2 gap-4 my-4">
+<div class="bg-white p-4 rounded shadow"><div>Snacks</div><div id="kpiS" class="text-3xl font-bold"></div></div>
+<div class="bg-white p-4 rounded shadow"><div>Boxes</div><div id="kpiB" class="text-3xl font-bold"></div></div>
 </div>
-<div class="bg-white rounded-xl shadow p-4"><canvas id="ventas"></canvas></div>
+<div class="bg-white p-4 rounded shadow"><canvas id="chart"></canvas></div>
 </div>
 <script>
-fetch('datos.json').then(r=>r.json()).then(d=>{
- const ts=d.snacks.reduce((a,b)=>a+b,0), tb=d.boxes.reduce((a,b)=>a+b,0);
- document.getElementById('kpiSnacks').textContent=ts.toLocaleString('es-AR');
- document.getElementById('kpiBoxes').textContent=tb.toLocaleString('es-AR');
- new Chart(document.getElementById('ventas'),{
-  type:'bar',
-  data:{labels:d.meses,datasets:[
-    {label:'Snacks',data:d.snacks},
-    {label:'Boxes',data:d.boxes}
-  ]},
-  options:{responsive:true,plugins:{legend:{position:'bottom'}}}
- });
+let chart;
+function render(d){
+ const ts=d.snacks.reduce((a,b)=>a+b,0),tb=d.boxes.reduce((a,b)=>a+b,0);
+ kpiS.textContent=ts.toLocaleString('es-AR');
+ kpiB.textContent=tb.toLocaleString('es-AR');
+ if(chart) chart.destroy();
+ chart=new Chart(chartEl,{type:'bar',data:{labels:d.meses,datasets:[
+ {label:'Snacks',data:d.snacks},
+ {label:'Boxes',data:d.boxes}
+ ]}});
+}
+const chartEl=document.getElementById('chart');
+fetch('datos.json').then(r=>r.json()).then(render);
+
+excelFile.addEventListener('change',e=>{
+ const file=e.target.files[0];
+ if(!file)return;
+ const fr=new FileReader();
+ fr.onload=ev=>{
+   const wb=XLSX.read(ev.target.result,{type:'array'});
+   const ws=wb.Sheets[wb.SheetNames[0]];
+   const rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+   const meses=["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"];
+   const snacks=new Array(12).fill(0), boxes=new Array(12).fill(0);
+   rows.forEach(r=>{
+      const m=(r.Mes||r.mes||"").toString().trim();
+      const i=meses.findIndex(x=>x.toLowerCase()===m.toLowerCase().slice(0,3));
+      if(i>=0){
+        snacks[i]=Number(r.Snacks||r.snacks||0);
+        boxes[i]=Number(r.Boxes||r.boxes||0);
+      }
+   });
+   render({meses,snacks,boxes});
+ };
+ fr.readAsArrayBuffer(file);
 });
-</script>
-</body></html>
+</script></body></html>
