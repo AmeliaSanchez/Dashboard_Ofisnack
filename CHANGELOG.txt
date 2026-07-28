@@ -1,9 +1,0 @@
-Dashboard Ofisnack — V1.3
-
-- Se actualizó la tarjeta de Compra Cruzada.
-- La tarjeta muestra la cantidad de clientes que compran ambas líneas.
-- Se incorporó el porcentaje con un decimal sobre el total de clientes únicos.
-- Se muestra la relación utilizada para el cálculo: clientes de ambas líneas / clientes únicos.
-- Se agregó una barra visual de penetración de compra cruzada.
-- Para la base inicial, el resultado es 34 clientes, equivalentes al 6,4% de 531 clientes únicos.
-- Todos los valores se recalculan automáticamente al cargar un nuevo Excel.
